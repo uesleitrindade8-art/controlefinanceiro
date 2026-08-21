@@ -63,24 +63,45 @@
   .chart-tab.active { background: #00D4FF; color: #050508; font-weight: 700; }
   
   .alert-box { background: rgba(255, 77, 77, 0.1); border: 1px solid rgba(255, 77, 77, 0.4); border-radius: 12px; padding: 12px 16px; margin-bottom: 16px; font-size: 12px; color: #FF4D4D; display: flex; gap: 10px; align-items: flex-start; }
+
+  /* Animações da Tela de Login */
+  @keyframes fadeInDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+  .auth-anim-1 { animation: fadeInDown 0.8s ease-out forwards; }
+  .auth-anim-2 { animation: fadeInUp 1s ease-out 0.2s forwards; opacity: 0; }
+  .auth-anim-3 { animation: fadeInUp 1s ease-out 0.4s forwards; opacity: 0; }
 </style>
 </head>
 <body class="text-white max-w-md mx-auto min-h-screen flex flex-col">
 
-<!-- TELA DE LOGIN / CADASTRO -->
+<!-- TELA DE LOGIN / CADASTRO ATUALIZADA -->
 <div id="auth-screen" class="fixed inset-0 z-50 bg-[#050508] flex flex-col justify-center p-6">
-  <div class="text-center mb-8">
+  <div class="text-center mb-10 auth-anim-1">
+    <div class="inline-block mb-4">
+      <div class="w-16 h-16 mx-auto rounded-2xl bg-[#00D4FF]/10 flex items-center justify-center border border-[#00D4FF]/30 shadow-[0_0_20px_rgba(0,212,255,0.2)]">
+         <svg class="w-8 h-8 neon-text" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
+      </div>
+    </div>
     <h1 class="text-3xl font-extrabold tracking-tight">FinTech<span class="neon-text">.Pro</span></h1>
     <p class="text-xs text-gray-400 uppercase tracking-widest mt-1">Controle Financeiro Avançado</p>
   </div>
-  <div class="glass p-6 rounded-2xl space-y-3">
-    <input type="email" id="auth-email" placeholder="Seu melhor e-mail" class="w-full p-3 rounded-xl text-sm">
-    <input type="password" id="auth-pass" placeholder="Senha (min 6 dígitos)" class="w-full p-3 rounded-xl text-sm">
-    <button id="btn-login" class="btn-primary w-full p-3 rounded-xl text-sm uppercase tracking-wider">Entrar</button>
-    <button id="btn-signup" class="w-full p-3 bg-white/5 text-[#00D4FF] border border-[#00D4FF]/30 rounded-xl text-sm uppercase tracking-wider">Criar Conta</button>
-    <button id="btn-logout" class="hidden w-full p-3 bg-red-500/10 text-red-400 border border-red-500/30 rounded-xl text-sm uppercase tracking-wider">Sair</button>
+  
+  <div class="glass p-6 rounded-2xl space-y-4 auth-anim-2">
+    <div>
+      <label class="text-[10px] text-gray-400 uppercase tracking-widest ml-1">E-mail</label>
+      <input type="email" id="auth-email" placeholder="voce@exemplo.com" class="w-full p-3 rounded-xl text-sm mt-1">
+    </div>
+    <div>
+      <label class="text-[10px] text-gray-400 uppercase tracking-widest ml-1">Senha</label>
+      <input type="password" id="auth-pass" placeholder="Minimo 6 dígitos" class="w-full p-3 rounded-xl text-sm mt-1">
+    </div>
+    <div class="flex gap-3 pt-2">
+      <button id="btn-login" class="btn-primary flex-1 p-3 rounded-xl text-sm uppercase tracking-wider">Entrar</button>
+      <button id="btn-signup" class="flex-1 bg-white/5 text-[#00D4FF] border border-[#00D4FF]/30 rounded-xl text-sm uppercase tracking-wider p-3">Cadastrar</button>
+    </div>
   </div>
-  <p class="text-[10px] text-gray-500 text-center mt-6">Seus dados estão protegidos na nuvem do Google.</p>
+  
+  <p class="text-[10px] text-gray-500 text-center mt-8 auth-anim-3">🔒 Seus dados estão protegidos na nuvem do Google.</p>
 </div>
 
 <!-- APP PRINCIPAL (Escondido até logar) -->
@@ -233,6 +254,13 @@
       </div>
     </div>
 
+    <!-- NOVO BOTÃO DE LOGOUT AQUI -->
+    <div class="glass p-4 rounded-2xl mb-8 border border-red-500/30">
+      <h3 class="text-sm font-bold mb-3 text-red-400 uppercase tracking-widest">Conta de Acesso</h3>
+      <p class="text-xs text-gray-400 mb-4">Você está autenticado no app. Saia da conta para usar em outro dispositivo ou proteger seus dados se estiver em um computador público.</p>
+      <button id="btn-logout-app" class="w-full p-3 bg-red-500/10 text-red-400 border border-red-500/30 rounded-xl text-sm uppercase tracking-wider font-bold hover:bg-red-500/20 transition-colors">Sair da Conta (Logout)</button>
+    </div>
+
     <div class="glass p-4 rounded-2xl border border-red-500/30">
       <h3 class="text-sm font-bold mb-3 text-red-400 uppercase tracking-widest">Zona de Perigo</h3>
       <button id="btn-reset-app" class="w-full p-3 bg-red-500 text-white rounded-xl text-xs uppercase tracking-wider font-bold">Resetar Aplicativo</button>
@@ -281,6 +309,29 @@ const db = firebase.firestore();
 
 let currentUserId = null;
 
+// ================= SISTEMA DE TOAST GLOBAL =================
+function showToast(msg, type = 'success') {
+  let toast = document.getElementById('toast-msg');
+  if (!toast) { 
+    toast = document.createElement('div'); 
+    toast.id = 'toast-msg'; 
+    toast.className = 'fixed bottom-24 left-1/2 -translate-x-1/2 px-6 py-3 rounded-xl font-bold text-xs uppercase z-[100] opacity-0 transition-opacity duration-300'; 
+    document.body.appendChild(toast); 
+  }
+  toast.textContent = msg; 
+  toast.style.opacity = '1'; 
+  clearTimeout(toast._timer);
+  toast._timer = setTimeout(() => { toast.style.opacity = '0'; }, 2500);
+  
+  if(type === 'success') {
+    toast.style.backgroundColor = '#00D4FF';
+    toast.style.color = '#050508';
+  } else if(type === 'error') {
+    toast.style.backgroundColor = '#FF4D4D';
+    toast.style.color = '#fff';
+  }
+}
+
 // ================= AUTENTICAÇÃO =================
 firebase.auth().onAuthStateChanged(user => {
   if (user) {
@@ -288,30 +339,47 @@ firebase.auth().onAuthStateChanged(user => {
     document.getElementById('auth-screen').classList.add('hidden');
     document.getElementById('app-main').classList.remove('hidden');
     document.getElementById('app-main').classList.add('flex');
-    document.getElementById('btn-logout').classList.remove('hidden');
     initApp(); 
   } else {
     currentUserId = null;
     document.getElementById('auth-screen').classList.remove('hidden');
     document.getElementById('app-main').classList.add('hidden');
     document.getElementById('app-main').classList.remove('flex');
-    document.getElementById('btn-logout').classList.add('hidden');
   }
 });
 
-document.getElementById('btn-login').addEventListener('click', () => {
+document.getElementById('btn-login').addEventListener('click', async () => {
   const email = document.getElementById('auth-email').value;
   const pass = document.getElementById('auth-pass').value;
-  firebase.auth().signInWithEmailAndPassword(email, pass).catch(e => alert('Erro ao logar: ' + e.message));
+  if(!email || !pass) return showToast('Preencha e-mail e senha', 'error');
+  try {
+    await firebase.auth().signInWithEmailAndPassword(email, pass);
+    showToast('Login realizado com sucesso!');
+  } catch(e) {
+    showToast('Erro: ' + e.message, 'error');
+  }
 });
 
-document.getElementById('btn-signup').addEventListener('click', () => {
+document.getElementById('btn-signup').addEventListener('click', async () => {
   const email = document.getElementById('auth-email').value;
   const pass = document.getElementById('auth-pass').value;
-  firebase.auth().createUserWithEmailAndPassword(email, pass).catch(e => alert('Erro ao cadastrar: ' + e.message));
+  if(!email || !pass) return showToast('Preencha e-mail e senha', 'error');
+  try {
+    await firebase.auth().createUserWithEmailAndPassword(email, pass);
+    showToast('Cadastro realizado! Bem-vindo.');
+  } catch(e) {
+    showToast('Erro: ' + e.message, 'error');
+  }
 });
 
-document.getElementById('btn-logout').addEventListener('click', () => firebase.auth().signOut());
+document.getElementById('btn-logout-app').addEventListener('click', async () => {
+  try {
+    await firebase.auth().signOut();
+    showToast('Logout realizado. Até logo!');
+  } catch(e) {
+    showToast('Erro ao sair: ' + e.message, 'error');
+  }
+});
 
 // ================= APP ORIGINAL (Lógica Intacta) =================
 const defaultCategorias = [
@@ -341,13 +409,6 @@ function initApp() {
 }
 
 function setupEventListeners() {
-  function showToast(msg) {
-    let toast = document.getElementById('toast-msg');
-    if (!toast) { toast = document.createElement('div'); toast.id = 'toast-msg'; toast.className = 'fixed bottom-24 left-1/2 -translate-x-1/2 bg-[#00D4FF] text-black px-6 py-3 rounded-xl font-bold text-xs uppercase z-[100] opacity-0 transition-opacity duration-300'; document.body.appendChild(toast); }
-    toast.textContent = msg; toast.style.opacity = '1'; clearTimeout(toast._timer);
-    toast._timer = setTimeout(() => { toast.style.opacity = '0'; }, 2000);
-  }
-
   window.abrirModalMovimentacao = function(type, index, action) {
     movTarget = { type, index, action };
     document.getElementById('mov-titulo').innerText = action === 'aporte' ? 'Adicionar Valor' : (action === 'retirada' ? 'Retirar Valor' : 'Pagar Parcela');
