@@ -6,6 +6,10 @@
 <title>FinTech Pessoal Pro</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- SDK DO FIREBASE (Versão Compat para HTML puro) -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
@@ -62,6 +66,25 @@
 </style>
 </head>
 <body class="text-white max-w-md mx-auto min-h-screen flex flex-col">
+
+<!-- TELA DE LOGIN / CADASTRO -->
+<div id="auth-screen" class="fixed inset-0 z-50 bg-[#050508] flex flex-col justify-center p-6">
+  <div class="text-center mb-8">
+    <h1 class="text-3xl font-extrabold tracking-tight">FinTech<span class="neon-text">.Pro</span></h1>
+    <p class="text-xs text-gray-400 uppercase tracking-widest mt-1">Controle Financeiro Avançado</p>
+  </div>
+  <div class="glass p-6 rounded-2xl space-y-3">
+    <input type="email" id="auth-email" placeholder="Seu melhor e-mail" class="w-full p-3 rounded-xl text-sm">
+    <input type="password" id="auth-pass" placeholder="Senha (min 6 dígitos)" class="w-full p-3 rounded-xl text-sm">
+    <button id="btn-login" class="btn-primary w-full p-3 rounded-xl text-sm uppercase tracking-wider">Entrar</button>
+    <button id="btn-signup" class="w-full p-3 bg-white/5 text-[#00D4FF] border border-[#00D4FF]/30 rounded-xl text-sm uppercase tracking-wider">Criar Conta</button>
+    <button id="btn-logout" class="hidden w-full p-3 bg-red-500/10 text-red-400 border border-red-500/30 rounded-xl text-sm uppercase tracking-wider">Sair</button>
+  </div>
+  <p class="text-[10px] text-gray-500 text-center mt-6">Seus dados estão protegidos na nuvem do Google.</p>
+</div>
+
+<!-- APP PRINCIPAL (Escondido até logar) -->
+<div id="app-main" class="hidden flex-1 flex flex-col">
 
 <header class="p-5 flex flex-col gap-3 border-b border-white/5 sticky top-0 bg-[#050508] z-20">
   <div class="flex justify-between items-center">
@@ -227,6 +250,7 @@
   <button data-nav="projetos" class="nav-btn flex flex-col items-center text-gray-500 text-[7px] p-1 w-full"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg> Metas</button>
   <button data-nav="perfil" class="nav-btn flex flex-col items-center text-gray-500 text-[7px] p-1 w-full"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg> Perfil</button>
 </nav>
+</div>
 
 <!-- MODAIS -->
 <div id="modal-lancamento" class="modal-bg modal-hidden fixed inset-0 bg-black/80 z-50 flex items-end justify-center"><div class="modal-box glass w-full max-w-md rounded-t-3xl p-6 border-t border-[#00D4FF]"><div class="w-10 h-1 bg-gray-600 rounded-full mx-auto mb-6"></div><h3 class="text-lg font-bold mb-4" id="lanc-modal-titulo">Novo Lançamento</h3><div class="space-y-3"><select id="lanc-tipo" class="w-full p-3 rounded-xl text-sm"><option value="Receita">Receita</option><option value="Fixa">Despesa Fixa</option><option value="Variavel">Despesa Variável</option><option value="Cartao">Cartão de Crédito</option></select><select id="lanc-categoria" class="w-full p-3 rounded-xl text-sm"></select><input type="date" id="lanc-data" class="w-full p-3 rounded-xl text-sm mono"><input type="text" id="lanc-desc" placeholder="Descrição" class="w-full p-3 rounded-xl text-sm"><input type="number" id="lanc-valor" placeholder="Valor (R$)" step="0.01" class="w-full p-3 rounded-xl text-sm mono"><div id="field-parcelas" class="hidden"><label class="text-xs text-gray-400 uppercase tracking-wider">Quantas parcelas?</label><input type="number" id="lanc-parcelas" placeholder="Ex: 10" min="1" value="1" class="w-full p-3 rounded-xl text-sm mono mt-1"></div><div id="wallet-select-container"><label class="text-xs text-gray-400 uppercase">Pagar com / Creditar em</label><select id="lanc-carteira" class="w-full p-3 rounded-xl text-sm mt-1"></select></div><button id="btn-conf-lanc" class="btn-primary w-full p-3 rounded-xl text-sm uppercase tracking-wider">Confirmar</button></div></div></div>
@@ -241,6 +265,55 @@
 <div id="modal-fatura" class="modal-bg modal-hidden fixed inset-0 bg-black/80 z-50 flex items-end justify-center"><div class="modal-box glass w-full max-w-md rounded-t-3xl p-6 border-t border-[#00D4FF] max-h-[80vh] overflow-y-auto"><div class="w-10 h-1 bg-gray-600 rounded-full mx-auto mb-6"></div><h3 class="text-lg font-bold mb-1">Detalhes da Fatura</h3><p class="text-xs text-gray-400 mono mb-4" id="fatura-venc-info"></p><div id="fatura-itens-list" class="space-y-2"></div><button onclick="document.getElementById('modal-fatura').classList.add('modal-hidden')" class="btn-primary w-full p-3 rounded-xl text-sm uppercase tracking-wider mt-4">Fechar</button></div></div>
 
 <script>
+// ================= CONFIGURAÇÃO FIREBASE COM SEUS DADOS =================
+const firebaseConfig = {
+  apiKey: "AIzaSyAb7gFxC1Tea0lKpZkGUD8VaWP-DZY4sP0",
+  authDomain: "fintech-67749.firebaseapp.com",
+  projectId: "fintech-67749",
+  storageBucket: "fintech-67749.firebasestorage.app",
+  messagingSenderId: "738610076685",
+  appId: "1:738610076685:web:5bba3db0c8332effd28944",
+  measurementId: "G-PRQ2BCNSY4"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+let currentUserId = null;
+
+// ================= AUTENTICAÇÃO =================
+firebase.auth().onAuthStateChanged(user => {
+  if (user) {
+    currentUserId = user.uid;
+    document.getElementById('auth-screen').classList.add('hidden');
+    document.getElementById('app-main').classList.remove('hidden');
+    document.getElementById('app-main').classList.add('flex');
+    document.getElementById('btn-logout').classList.remove('hidden');
+    initApp(); 
+  } else {
+    currentUserId = null;
+    document.getElementById('auth-screen').classList.remove('hidden');
+    document.getElementById('app-main').classList.add('hidden');
+    document.getElementById('app-main').classList.remove('flex');
+    document.getElementById('btn-logout').classList.add('hidden');
+  }
+});
+
+document.getElementById('btn-login').addEventListener('click', () => {
+  const email = document.getElementById('auth-email').value;
+  const pass = document.getElementById('auth-pass').value;
+  firebase.auth().signInWithEmailAndPassword(email, pass).catch(e => alert('Erro ao logar: ' + e.message));
+});
+
+document.getElementById('btn-signup').addEventListener('click', () => {
+  const email = document.getElementById('auth-email').value;
+  const pass = document.getElementById('auth-pass').value;
+  firebase.auth().createUserWithEmailAndPassword(email, pass).catch(e => alert('Erro ao cadastrar: ' + e.message));
+});
+
+document.getElementById('btn-logout').addEventListener('click', () => firebase.auth().signOut());
+
+// ================= APP ORIGINAL (Lógica Intacta) =================
 const defaultCategorias = [
    { grupo: 'Renda', nome: 'Salário' }, { grupo: 'Renda', nome: 'Freelance' }, { grupo: 'Renda', nome: 'Investimentos' }, { grupo: 'Renda', nome: 'Pensão' },
    { grupo: 'Moradia', nome: 'Aluguel' }, { grupo: 'Moradia', nome: 'Energia' }, { grupo: 'Moradia', nome: 'Água' }, { grupo: 'Moradia', nome: 'Internet' }, { grupo: 'Moradia', nome: 'Condomínio' }, { grupo: 'Moradia', nome: 'IPTU' },
@@ -262,8 +335,12 @@ let state = {
 let chartGastos = null, chartEvolucao = null, chartCarteiras = null;
 let currentDebtIndex = null, movTarget = null, editModeLanc = null, editCatIndex = null, editOrcIndex = null;
 
-document.addEventListener('DOMContentLoaded', () => {
-  
+function initApp() {
+  setupEventListeners();
+  loadStateFromDB();
+}
+
+function setupEventListeners() {
   function showToast(msg) {
     let toast = document.getElementById('toast-msg');
     if (!toast) { toast = document.createElement('div'); toast.id = 'toast-msg'; toast.className = 'fixed bottom-24 left-1/2 -translate-x-1/2 bg-[#00D4FF] text-black px-6 py-3 rounded-xl font-bold text-xs uppercase z-[100] opacity-0 transition-opacity duration-300'; document.body.appendChild(toast); }
@@ -278,7 +355,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('modal-movimentacao').classList.remove('modal-hidden');
   };
 
-  window.delLancamento = function(idx) { state.lancamentos.splice(idx, 1); saveState(); refreshGlobalUI(); showToast('Excluído!'); };
+  window.delLancamento = function(idx) { state.lancamentos.splice(idx, 1); saveStateToDB(); refreshGlobalUI(); showToast('Excluído!'); };
   window.editLancamento = function(idx) {
     editModeLanc = idx; const l = state.lancamentos[idx];
     document.getElementById('lanc-tipo').value = l.tipo;
@@ -295,13 +372,13 @@ document.addEventListener('DOMContentLoaded', () => {
   window.darBaixaConta = function(idx) {
     const c = state.contas[idx]; if (!c) return;
     state.lancamentos.push({ data: new Date().toISOString().slice(0, 10), tipo: c.tipo, desc: c.desc, valor: c.valor, categoria: c.categoria, carteira: state.carteiras[0].nome, pago: true });
-    saveState(); refreshGlobalUI(); renderLembretes(); showToast('Baixa dada!');
+    saveStateToDB(); refreshGlobalUI(); renderLembretes(); showToast('Baixa dada!');
   };
-  window.delConta = function(idx) { state.contas.splice(idx, 1); saveState(); renderContas(); renderLembretes(); };
-  window.delProjeto = function(idx) { if(confirm('Excluir?')) { state.projetos.splice(idx, 1); saveState(); renderProjetos(); } };
-  window.concluirDiaDesafio = function(idx) { state.projetos[idx].diasConcluidos++; saveState(); renderProjetos(); showToast('Dia concluído!'); };
-  window.delSazonal = function(idx) { if(confirm('Excluir?')) { state.sazonais.splice(idx, 1); saveState(); renderSazonais(); } };
-  window.delDivida = function(idx) { if(confirm('Excluir?')) { state.dividas.splice(idx, 1); saveState(); renderDividas(); } };
+  window.delConta = function(idx) { state.contas.splice(idx, 1); saveStateToDB(); renderContas(); renderLembretes(); };
+  window.delProjeto = function(idx) { if(confirm('Excluir?')) { state.projetos.splice(idx, 1); saveStateToDB(); renderProjetos(); } };
+  window.concluirDiaDesafio = function(idx) { state.projetos[idx].diasConcluidos++; saveStateToDB(); renderProjetos(); showToast('Dia concluído!'); };
+  window.delSazonal = function(idx) { if(confirm('Excluir?')) { state.sazonais.splice(idx, 1); saveStateToDB(); renderSazonais(); } };
+  window.delDivida = function(idx) { if(confirm('Excluir?')) { state.dividas.splice(idx, 1); saveStateToDB(); renderDividas(); } };
   window.abrirModalPagamento = function(idx) { currentDebtIndex = idx; const d = state.dividas[idx]; document.getElementById('mov-valor').value = (d.total/d.parcelas).toFixed(2); document.getElementById('modal-movimentacao').classList.remove('modal-hidden'); };
   
   window.verFatura = function(venc) {
@@ -334,7 +411,7 @@ document.addEventListener('DOMContentLoaded', () => {
       
       faturaItens.forEach(l => l.pago = true);
       state.lancamentos.push({ data: new Date().toISOString().slice(0,10), tipo: 'Fixa', desc: `Pgto Fatura Cartão ${formatarDataLocal(venc)}`, valor: total, categoria: 'Dívidas: Cartão', carteira: choice, pago: true });
-      saveState();
+      saveStateToDB();
       refreshGlobalUI();
       renderFaturas();
       showToast('Fatura Quitada!');
@@ -346,9 +423,8 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('cat-nome').value = c.nome;
     document.getElementById('modal-categoria').classList.remove('modal-hidden');
   };
-  window.delCat = function(idx) { if(confirm('Excluir categoria?')) { state.categorias.splice(idx, 1); saveState(); populateAllCategories(); renderCategoriasPerfil(); } };
+  window.delCat = function(idx) { if(confirm('Excluir categoria?')) { state.categorias.splice(idx, 1); saveStateToDB(); populateAllCategories(); renderCategoriasPerfil(); } };
 
-  // Funções de Orçamento
   window.editOrc = function(idx) {
     editOrcIndex = idx; const o = state.orcamentos[idx];
     document.getElementById('orc-modal-titulo').innerText = 'Editar Orçamento';
@@ -360,7 +436,7 @@ document.addEventListener('DOMContentLoaded', () => {
   window.delOrc = function(idx) {
     if(confirm('Excluir este orçamento?')) { 
       state.orcamentos.splice(idx, 1); 
-      saveState(); renderOrcamentos(); showToast('Orçamento Excluído!'); 
+      saveStateToDB(); renderOrcamentos(); showToast('Orçamento Excluído!'); 
     }
   };
 
@@ -419,7 +495,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.getElementById('btn-add-wallet').addEventListener('click', () => {
     const nome = prompt("Nome da nova carteira (Ex: Nubank, Dinheiro):");
-    if (nome) { const tipo = confirm("É um Cartão de Crédito? OK=Sim, Cancelar=Não") ? 'credito' : 'debito'; state.carteiras.push({ id: 'w'+Date.now(), nome, tipo }); saveState(); renderCarteiras(); renderSaldosCarteiras(); }
+    if (nome) { const tipo = confirm("É um Cartão de Crédito? OK=Sim, Cancelar=Não") ? 'credito' : 'debito'; state.carteiras.push({ id: 'w'+Date.now(), nome, tipo }); saveStateToDB(); renderCarteiras(); renderSaldosCarteiras(); }
   });
 
   document.getElementById('lanc-tipo').addEventListener('change', function() {
@@ -448,45 +524,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.getElementById('btn-reset-app').addEventListener('click', () => {
     if (confirm('TEM CERTEZA ABSOLUTA? Isso vai apagar TUDO e reiniciar o app.')) {
-      localStorage.removeItem('fintech_state'); location.reload();
+      state = { 
+        lancamentos: [], contas: [], projetos: [], sazonais: [], dividas: [], orcamentos: [], categorias: [...defaultCategorias],
+        perfil: { mostrarDicas: true }, carteiras: [
+          { id: 'w1', nome: 'Conta Corrente', tipo: 'debito' },
+          { id: 'w2', nome: 'Cartão de Crédito', tipo: 'credito', diaFechamento: 1, diaVencimento: 10 }
+        ] 
+      };
+      saveStateToDB(); location.reload();
     }
   });
 
   document.querySelectorAll('.modal-bg').forEach(m => m.addEventListener('click', (e) => { if(e.target === m) m.classList.add('modal-hidden'); }));
-
-  function saveState() { localStorage.setItem('fintech_state', JSON.stringify(state)); }
-  function loadState() {
-    const saved = localStorage.getItem('fintech_state');
-    if (saved) {
-      state = JSON.parse(saved);
-      
-      if (!Array.isArray(state.carteiras)) state.carteiras = [];
-      let hasCreditCard = false;
-      state.carteiras.forEach(w => {
-        if (!w.tipo) {
-          if (w.nome.toLowerCase().includes('cartão') || w.nome.toLowerCase().includes('credito')) w.tipo = 'credito';
-          else w.tipo = 'debito';
-        }
-        if (w.tipo === 'credito') {
-          hasCreditCard = true;
-          if (!w.diaFechamento) w.diaFechamento = 1;
-          if (!w.diaVencimento) w.diaVencimento = 10;
-        }
-      });
-      if (!hasCreditCard) {
-        state.carteiras.push({ id: 'w_cc', nome: 'Cartão de Crédito', tipo: 'credito', diaFechamento: 1, diaVencimento: 10 });
-      }
-
-      if (!Array.isArray(state.categorias)) state.categorias = [...defaultCategorias];
-      if (!Array.isArray(state.orcamentos)) state.orcamentos = [];
-      if (!Array.isArray(state.lancamentos)) state.lancamentos = [];
-      if (!Array.isArray(state.contas)) state.contas = [];
-      if (!Array.isArray(state.projetos)) state.projetos = [];
-      if (!Array.isArray(state.sazonais)) state.sazonais = [];
-      if (!Array.isArray(state.dividas)) state.dividas = [];
-      if (!state.perfil) state.perfil = { mostrarDicas: true };
-    }
-  }
 
   function updateWalletSelect(tipo, selectedVal = null) {
     const sel = document.getElementById('lanc-carteira'); sel.innerHTML = '';
@@ -587,7 +636,7 @@ document.addEventListener('DOMContentLoaded', () => {
         state.lancamentos.push({ data, tipo, desc, valor, categoria: cat, carteira, pago: true, vencFatura: null });
       }
     }
-    saveState(); refreshGlobalUI(); document.getElementById('modal-lancamento').classList.add('modal-hidden'); showToast('Salvo!');
+    saveStateToDB(); refreshGlobalUI(); document.getElementById('modal-lancamento').classList.add('modal-hidden'); showToast('Salvo!');
   });
 
   document.getElementById('btn-conf-cat').addEventListener('click', () => {
@@ -595,7 +644,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if(!g || !n) return alert('Preencha grupo e nome.');
     if(editCatIndex !== null) state.categorias[editCatIndex] = { grupo: g, nome: n };
     else state.categorias.push({ grupo: g, nome: n });
-    saveState(); populateAllCategories(); renderCategoriasPerfil();
+    saveStateToDB(); populateAllCategories(); renderCategoriasPerfil();
     document.getElementById('modal-categoria').classList.add('modal-hidden'); showToast('Categoria Salva!');
   });
 
@@ -618,7 +667,7 @@ document.addEventListener('DOMContentLoaded', () => {
         showToast('Orçamento Definido!');
       }
     }
-    saveState();
+    saveStateToDB();
     renderOrcamentos();
     document.getElementById('modal-orcamento').classList.add('modal-hidden');
   });
@@ -632,7 +681,7 @@ document.addEventListener('DOMContentLoaded', () => {
       valor: parseFloat(document.getElementById('conta-valor').value),
       vencimento: vencCheck ? document.getElementById('conta-venc').value : null
     };
-    if (!c.desc || !c.valor) return; state.contas.push(c); saveState(); renderContas(); renderLembretes(); document.getElementById('modal-conta').classList.add('modal-hidden');
+    if (!c.desc || !c.valor) return; state.contas.push(c); saveStateToDB(); renderContas(); renderLembretes(); document.getElementById('modal-conta').classList.add('modal-hidden');
   });
   
   document.getElementById('btn-conf-proj').addEventListener('click', () => { 
@@ -640,17 +689,17 @@ document.addEventListener('DOMContentLoaded', () => {
     if(!n||!m) return; 
     if(t === 'desafio') state.projetos.push({tipo:'desafio', nome:n, diasMeta:m, diasConcluidos:0}); 
     else state.projetos.push({tipo:'financeiro', nome:n, meta:m, saldo:0}); 
-    saveState(); renderProjetos(); document.getElementById('modal-projeto').classList.add('modal-hidden'); 
+    saveStateToDB(); renderProjetos(); document.getElementById('modal-projeto').classList.add('modal-hidden'); 
   });
   
-  document.getElementById('btn-conf-saz').addEventListener('click', () => { const d = document.getElementById('saz-desc').value, dt = document.getElementById('saz-data').value, v = parseFloat(document.getElementById('saz-valor').value); if(!d||!dt||!v) return; state.sazonais.push({desc:d, data:dt, valor:v, guardado:0}); saveState(); renderSazonais(); document.getElementById('modal-sazonal').classList.add('modal-hidden'); });
-  document.getElementById('btn-conf-div').addEventListener('click', () => { const d = document.getElementById('div-desc').value, t = parseFloat(document.getElementById('div-total').value), p = parseInt(document.getElementById('div-parcelas').value), di = document.getElementById('div-data').value; if(!d||!t||!p||!di) return; state.dividas.push({desc:d, total:t, parcelas:p, pagas:0, dataInicio:di, pagamentos:[]}); saveState(); renderDividas(); document.getElementById('modal-divida').classList.add('modal-hidden'); });
+  document.getElementById('btn-conf-saz').addEventListener('click', () => { const d = document.getElementById('saz-desc').value, dt = document.getElementById('saz-data').value, v = parseFloat(document.getElementById('saz-valor').value); if(!d||!dt||!v) return; state.sazonais.push({desc:d, data:dt, valor:v, guardado:0}); saveStateToDB(); renderSazonais(); document.getElementById('modal-sazonal').classList.add('modal-hidden'); });
+  document.getElementById('btn-conf-div').addEventListener('click', () => { const d = document.getElementById('div-desc').value, t = parseFloat(document.getElementById('div-total').value), p = parseInt(document.getElementById('div-parcelas').value), di = document.getElementById('div-data').value; if(!d||!t||!p||!di) return; state.dividas.push({desc:d, total:t, parcelas:p, pagas:0, dataInicio:di, pagamentos:[]}); saveStateToDB(); renderDividas(); document.getElementById('modal-divida').classList.add('modal-hidden'); });
 
   document.getElementById('btn-conf-transf').addEventListener('click', () => {
     const o = document.getElementById('transf-origem').value, d = document.getElementById('transf-destino').value, v = parseFloat(document.getElementById('transf-valor').value);
     if(!o || !d || o === d || !v) return alert('Origem, destino inválidos ou valor zero.');
     state.lancamentos.push({ data: new Date().toISOString().slice(0,10), tipo: 'Transferencia', desc: `Transf: ${o} -> ${d}`, valor: v, origem: o, destino: d });
-    saveState(); refreshGlobalUI(); document.getElementById('modal-transferencia').classList.add('modal-hidden'); showToast('Transferido!');
+    saveStateToDB(); refreshGlobalUI(); document.getElementById('modal-transferencia').classList.add('modal-hidden'); showToast('Transferido!');
   });
 
   document.getElementById('btn-conf-mov').addEventListener('click', () => {
@@ -658,17 +707,17 @@ document.addEventListener('DOMContentLoaded', () => {
     if (currentDebtIndex !== null) {
       state.dividas[currentDebtIndex].pagas++; state.dividas[currentDebtIndex].pagamentos.push({data: new Date().toISOString().slice(0,10), valor: v});
       state.lancamentos.push({ data: new Date().toISOString().slice(0,10), tipo: 'Fixa', desc: `Pg Dívida: ${state.dividas[currentDebtIndex].desc}`, valor: v, categoria: 'Dívidas: Empréstimo', carteira: state.carteiras[0].nome, pago: true });
-      saveState(); renderDividas(); currentDebtIndex = null;
+      saveStateToDB(); renderDividas(); currentDebtIndex = null;
     } else if (movTarget) {
       const realV = movTarget.action === 'retirada' ? -v : v;
       if (movTarget.type === 'projeto') { state.projetos[movTarget.index].saldo += realV; renderProjetos(); }
       else { state.sazonais[movTarget.index].guardado += realV; renderSazonais(); }
       state.lancamentos.push({ data: new Date().toISOString().slice(0,10), tipo: movTarget.action === 'aporte' ? 'Variavel' : 'Receita', desc: `${movTarget.action === 'aporte' ? 'Aporte' : 'Resgate'}`, valor: v, categoria: 'Renda: Investimentos', carteira: state.carteiras[0].nome, pago: true });
     }
-    refreshGlobalUI(); document.getElementById('modal-movimentacao').classList.add('modal-hidden'); movTarget = null;
+    saveStateToDB(); refreshGlobalUI(); document.getElementById('modal-movimentacao').classList.add('modal-hidden'); movTarget = null;
   });
 
-  document.getElementById('toggle-dicas-container').addEventListener('click', () => { state.perfil.mostrarDicas = !state.perfil.mostrarDicas; saveState(); renderDicas(); });
+  document.getElementById('toggle-dicas-container').addEventListener('click', () => { state.perfil.mostrarDicas = !state.perfil.mostrarDicas; saveStateToDB(); renderDicas(); });
 
   function renderDicas() { document.querySelectorAll('.dica-box').forEach(el => el.classList.toggle('hidden', !state.perfil.mostrarDicas)); document.getElementById('toggle-dicas-bg').classList.toggle('active', state.perfil.mostrarDicas); }
   function formatarDataLocal(s) { if(!s) return '--/--/----'; const [y,m,d]=s.split('-'); return `${d}/${m}/${y}`; }
@@ -789,12 +838,12 @@ document.addEventListener('DOMContentLoaded', () => {
           </div>
       `;
       document.getElementById('btn-edit-cc').addEventListener('click', () => {
-          cc.diaFechamento = null; cc.diaVencimento = null; saveState(); renderCartaoSettings();
+          cc.diaFechamento = null; cc.diaVencimento = null; saveStateToDB(); renderCartaoSettings();
       });
       document.getElementById('btn-del-cc').addEventListener('click', () => {
           if(confirm('Excluir este cartão? Lançamentos antigos não serão afetados, mas não poderá lançar novos.')) { 
               state.carteiras = state.carteiras.filter(w => w.id !== cc.id); 
-              saveState(); renderCartaoSettings(); renderSaldosCarteiras(); renderCarteiras();
+              saveStateToDB(); renderCartaoSettings(); renderSaldosCarteiras(); renderCarteiras();
           }
       });
     } else {
@@ -811,7 +860,7 @@ document.addEventListener('DOMContentLoaded', () => {
           const v = parseInt(document.getElementById('cc-vencimento').value);
           if(!f || !v) return alert('Informe dias válidos (1-31)');
           cc.diaFechamento = f; cc.diaVencimento = v;
-          saveState(); showToast('Datas salvas!'); renderCartaoSettings();
+          saveStateToDB(); showToast('Datas salvas!'); renderCartaoSettings();
       });
     }
   }
@@ -965,7 +1014,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  loadState(); populateAllCategories();
+  populateAllCategories();
   const ys = document.getElementById('filter-year-sel'); const cy = new Date().getFullYear();
   for(let y=cy-3; y<=cy+1; y++) ys.innerHTML += `<option value="${y}">${y}</option>`;
   document.getElementById('filter-month-sel').value = String(new Date().getMonth() + 1).padStart(2, '0');
@@ -975,7 +1024,52 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('search-resumo').addEventListener('input', renderDashboard);
 
   renderDicas(); renderCarteiras(); renderCategoriasPerfil(); refreshGlobalUI(); renderContas(); renderProjetos(); renderSazonais(); renderDividas();
-});
+}
+
+// ================= FUNÇÕES DE BANCO DE DADOS (FIRESTORE) =================
+let saveTimeout = null;
+function saveStateToDB() {
+  if (saveTimeout) clearTimeout(saveTimeout);
+  saveTimeout = setTimeout(async () => {
+    try {
+      await db.collection('users_data').doc(currentUserId).set({
+        jsonData: JSON.stringify(state)
+      }, { merge: true });
+    } catch (e) {
+      console.error("Erro ao salvar no Firebase:", e);
+    }
+  }, 500);
+}
+
+async function loadStateFromDB() {
+  try {
+    const doc = await db.collection('users_data').doc(currentUserId).get();
+    if (doc.exists && doc.data().jsonData) {
+      state = JSON.parse(doc.data().jsonData);
+      if (!Array.isArray(state.carteiras)) state.carteiras = [];
+      let hasCreditCard = false;
+      state.carteiras.forEach(w => {
+        if (!w.tipo) w.tipo = (w.nome.toLowerCase().includes('cartão') || w.nome.toLowerCase().includes('credito')) ? 'credito' : 'debito';
+        if (w.tipo === 'credito') { hasCreditCard = true; if (!w.diaFechamento) w.diaFechamento = 1; if (!w.diaVencimento) w.diaVencimento = 10; }
+      });
+      if (!hasCreditCard) state.carteiras.push({ id: 'w_cc', nome: 'Cartão de Crédito', tipo: 'credito', diaFechamento: 1, diaVencimento: 10 });
+      if (!Array.isArray(state.categorias)) state.categorias = [...defaultCategorias];
+      if (!Array.isArray(state.orcamentos)) state.orcamentos = [];
+      if (!Array.isArray(state.lancamentos)) state.lancamentos = [];
+      if (!Array.isArray(state.contas)) state.contas = [];
+      if (!Array.isArray(state.projetos)) state.projetos = [];
+      if (!Array.isArray(state.sazonais)) state.sazonais = [];
+      if (!Array.isArray(state.dividas)) state.dividas = [];
+      if (!state.perfil) state.perfil = { mostrarDicas: true };
+      
+      populateAllCategories(); renderDicas(); renderCarteiras(); renderCategoriasPerfil(); refreshGlobalUI(); renderContas(); renderProjetos(); renderSazonais(); renderDividas();
+    } else {
+      await saveStateToDB();
+    }
+  } catch (error) {
+    console.error("Erro ao carregar dados do Firebase:", error);
+  }
+}
 </script>
 </body>
 </html>
